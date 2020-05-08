@@ -1,0 +1,159 @@
+# Docker Compose Nasbox Version
+version: "2"
+services:
+  traefik:
+    image: traefik:v1.7
+    # if you are having grief setting up ACME, remove the acme bit and read the traefik.toml file
+    command: --web --docker --docker.watch --docker.domain=${DOMAIN} \
+      --docker.exposedbydefault=false --acme.domains=${DOMAIN}
+    container_name: traefik
+    hostname: traefik
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    networks:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+      - "9081:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - "${CONFIG_DIR}/traefik/acme.json:/acme.json"
+      - "${CONFIG_DIR}/traefik/traefik.toml:/etc/traefik/traefik.toml"
+    labels:
+      traefik.enable: "true"
+      traefik.frontend.rule: "Host:traefik.${DOMAIN}"
+      traefik.port: "8080"
+      traefik.frontend.auth.basic: "${HTPASSWD}"
+      com.centurylinklabs.watchtower.enable: "true"
+    restart: unless-stopped
+  data:
+    image: "tianon/true"
+    volumes:
+      - "${CONFIG_DIR}:/config"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "${MEDIA_DIR}:/data"
+      - "${TEMP_DIR}:/temp"
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PGID
+      - PUID
+      - TZ
+    command: --schedule "0 0 6 * * *" --label-enable --cleanup
+    restart: unless-stopped
+  ddclient:
+    image: linuxserver/ddclient
+    container_name: ddclient
+    volumes:
+      - /volume1/docker/config/ddclient:/config
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+    environment:
+      - PGID
+      - PUID
+      - TZ
+    restart: unless-stopped
+  ### SABNZBD CONFIG
+  sabnzbd:
+    image: "linuxserver/sabnzbd:latest"
+    volumes_from:
+      - "data"
+    volumes:
+      - "${CONFIG_DIR}/sabnzbd:/config"
+      - "${TEMP_DIR}/temp/downloads/sabnzbd:/downloads"
+      - "${TEMP_DIR}/incomplete/sabnzbd:/incomplete-downloads"
+    environment:
+      - "PUID=${PUID}"
+      - "PGID=${PGID}"
+      - "TZ=${TZ}"
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    networks:
+      - web
+    ports:
+      - "18000:8080"
+    labels:
+      traefik.enable: "true"
+      traefik.port: "8080"
+      traefik.frontend.rule: "Host:sabnzbd.${DOMAIN}"
+      traefik.frontend.auth.basic: "${HTPASSWD}"
+      traefik.backend: "sabnzbd"
+      com.centurylinklabs.watchtower.enable: "true"
+
+    restart: unless-stopped
+  ### SONARR
+  sonarr:
+    image: "linuxserver/sonarr:latest"
+    volumes_from:
+      - "data"
+    volumes:
+      - "${CONFIG_DIR}/sonarr:/config"
+      - "${MEDIA_DIR}:/media"
+    ports:
+      - "8082:8989"
+    networks:
+      - web
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - "PUID=${PUID}"
+      - "PGID=${PGID}"
+      - "TZ=${TZ}"
+    links:
+      - "sabnzbd"
+    restart: unless-stopped
+    labels:
+      traefik.enable: "true"
+      traefik.port: "8989"
+      traefik.frontend.rule: "Host:sonarr.${DOMAIN}"
+      traefik.frontend.auth.basic: "${HTPASSWD}"
+      com.centurylinklabs.watchtower.enable: "true"
+  plex:
+    image: "linuxserver/plex:latest"
+    volumes_from:
+      - "data"
+    volumes:
+      - "${CONFIG_DIR}/plex:/config"
+      - "/tmp/:/transcode"
+      - "${TEMP_DIR}/plex/sync:/config/Library/Application Support/Plex Media Server/Cache/Transcode/Sync+"
+    ports:
+      - "32400:32400"
+    environment:
+      - "VERSION=${PLEXVERSION}"
+      - "PGID=${PGID}"
+      - "PUID=${PUID}"
+      - "TZ=${TZ}"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    devices:
+      - /dev/dri:/dev/dri
+    privileged: true
+    networks:
+      - web
+    # network_mode: "host"
+    labels:
+      traefik.enable: "false"
+      traefik.port: "32400"
+      traefik.frontend.rule: "Host:plex.${DOMAIN}"
+      com.centurylinklabs.watchtower.enable: "true"
+
+networks:
+  web:
+    external: true

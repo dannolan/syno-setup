@@ -1,0 +1,27 @@
+debug = false
+
+# if you have issues debugging this turn debugging above to true and make the loglevel INFO
+logLevel = "ERROR"
+defaultEntryPoints = ["http", "https"]
+
+[entryPoints]
+  [entryPoints.http]
+  address = ":80"
+    # if you have problems with HTTPS or whatever, comment out the below block
+    [entryPoints.http.redirect]
+    entryPoint = "https"
+  [entryPoints.https]
+  address = ":443"
+  [entryPoints.https.tls]
+
+[retry]
+
+# if you have problems with HTTPS comment this out and remove --acme-domains from the init script
+
+[acme]
+email = "dan.james.nolan@gmail.com"
+storage = "acme.json"
+entryPoint = "https"
+OnHostRule = true
+  [acme.httpChallenge]
+  entryPoint = "http"

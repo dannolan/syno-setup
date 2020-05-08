@@ -42,8 +42,8 @@ Before you get started this doc assumes you've done the following:
 - Have SSH access to your Synology
 - Installed Docker on your Synology
 - Install Docker Compose on your Synology (This may or may not come with docker I can't recall)
-- Configured the Synology to not run DSM on port 80 - [try this](#moving-from-port-80))
-- Set up a `rc.d` script to chmod the hardware accelerator on startup so Plex can use it - [this will help](#setting-up-rc.d-script)
+- Configured the Synology to not run DSM on port 80 - check [Resources](#resources)
+- Set up a `rc.d` script to chmod the hardware accelerator on startup so Plex can use it - check [Resources](#resources)
 - Have a domain set up with a remote provider that supports [ddclient](https://sourceforge.net/p/ddclient/wiki/Home/) - I personally like Namecheap, this is up to you.
 
 * Set up subdomains for `@`, `traefik`, `sabnzbd`, `plex` and `sonarr` on your root domain
@@ -79,7 +79,7 @@ Also everything should auto-update and just work as expected. For configuring so
 - If you want to add other hosts **MAKE SURE** you use the internal port not the exposed external port ie if it's setup as "12345:1234" set your traefik port to '1234' and make sure it's on the same network
 - Make sure your labels are the last thing in your YML section for each item
 
-## Resources / Appendix
+## Resources
 
 ### Moving from Port 80
 

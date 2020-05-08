@@ -44,7 +44,7 @@ Before you get started this doc assumes you've done the following:
 - Install Docker Compose on your Synology (This may or may not come with docker I can't recall)
 - Configured the Synology to not run DSM on port 80 - check [Resources](#resources)
 - Set up a `rc.d` script to chmod the hardware accelerator on startup so Plex can use it - check [Resources](#resources)
-- Have a domain set up with a remote provider that supports [ddclient](https://sourceforge.net/p/ddclient/wiki/Home/) - I personally like Namecheap, this is up to you.
+- Have a domain set up with a remote provider that supports [ddclient](https://sourceforge.net/p/ddclient/wiki/Home/) - I personally like Namecheap, this is up to you. Actually just buy a new domain on namecheap, I figured out how to get this working with namecheap, it took hours to debug, but now it works and updates all the subdomains so just do that. Xyz domains are like $5 a year.
 
 * Set up subdomains for `@`, `traefik`, `sabnzbd`, `plex` and `sonarr` on your root domain
 
